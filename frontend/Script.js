@@ -428,7 +428,7 @@ function renderHistory(rows) {
     } catch (err) {
       reason = err.name === "AbortError" ? "Analysis request timed out."
         : err instanceof TypeError
-          ? "Could not reach the analysis API. Run `python app.py` and open http://127.0.0.1:8001."
+          ? "Could not reach the analysis API. Run `python backend/app.py` and open http://127.0.0.1:8001."
           : String(err.message || "Analysis failed.");
     }
     drop.classList.remove("loading");

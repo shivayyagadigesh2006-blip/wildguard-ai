@@ -28,6 +28,7 @@ from torchvision import models, transforms
 from torch import nn
 
 ROOT = Path(__file__).resolve().parent
+FRONTEND_ROOT = ROOT.parent / "frontend"
 MODEL_PATH = ROOT / "models" / "best_wild_animal_classifier_b3.pth"
 SPARROW_MODEL_DIR = ROOT / "models" / "sparrow"
 DETECTOR_MODEL_ID = "MDV6-apa-rtdetr-e"
@@ -46,10 +47,10 @@ ISO6709_PATTERN = re.compile(
     r"^\s*([+-]\d{2}(?:\.\d+)?)([+-]\d{3}(?:\.\d+)?)(?:[+-]\d{2,}(?:\.\d+)?)?/?\s*$"
 )
 STATIC_FILES = {
-    "index.html": ROOT / "index.html",
-    "Style.css": ROOT / "Style.css",
-    "Script.js": ROOT / "Script.js",
-    "Studio.js": ROOT / "Studio.js",
+    "index.html": FRONTEND_ROOT / "index.html",
+    "Style.css": FRONTEND_ROOT / "Style.css",
+    "Script.js": FRONTEND_ROOT / "Script.js",
+    "Studio.js": FRONTEND_ROOT / "Studio.js",
 }
 STATIC_DIRECTORIES = {"images", "models"}
 STATIC_EXTENSIONS = {".avif", ".glb", ".jpeg", ".jpg", ".png", ".webp"}
@@ -773,8 +774,9 @@ def static_asset(asset_path: str) -> FileResponse:
     if len(parts) == 2 and parts[0] in STATIC_DIRECTORIES:
         directory, filename = parts
         if Path(filename).suffix.lower() in STATIC_EXTENSIONS:
-            asset = (ROOT / directory / filename).resolve()
-            if asset.parent == (ROOT / directory).resolve() and asset.is_file():
+            asset_root = FRONTEND_ROOT / directory if directory == "images" else ROOT / directory
+            asset = (asset_root / filename).resolve()
+            if asset.parent == asset_root.resolve() and asset.is_file():
                 return FileResponse(asset)
 
     raise HTTPException(status_code=404, detail="File not found.")

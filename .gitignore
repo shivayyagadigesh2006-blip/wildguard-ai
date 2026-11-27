@@ -1,4 +1,6 @@
 __pycache__/
 .env
-data/
-models/sparrow/
+backend/__pycache__/
+backend/data/
+backend/models/sparrow/
+.venv/
