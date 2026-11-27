@@ -164,7 +164,7 @@ const fillBars = (root) => requestAnimationFrame(() => requestAnimationFrame(() 
 function renderResults(list) {
   const ul = $("#results");
   ul.innerHTML = list.length ? list.map((r) => `
-    <li><div class="res-top"><div><div class="res-name">${esc(r.species)}</div><div class="res-sci">${esc(r.scientific || "Whole-image species match")}</div></div>
+    <li><div class="res-top"><div><div class="res-name">${esc(r.species)}</div><div class="res-sci">${esc(r.scientific || "Detected animal crop")}</div></div>
     <span class="res-pct">${pct(r.confidence)}%</span></div>
     <div class="bar" role="img" aria-label="Confidence ${pct(r.confidence)} percent"><i data-w="${pct(r.confidence)}"></i></div></li>`).join("")
     : `<li class="empty-state">No classification candidates are available.</li>`;

@@ -16,11 +16,11 @@ Open [http://127.0.0.1:8001](http://127.0.0.1:8001). Use this address rather tha
 
 Animal detection and species classification use the local models; uploaded images and video frames are processed locally.
 
-## Render PTH classifier
+## Render animal detection and classification
 
-The Render Blueprint runs `backend/classifier_app.py` through `backend/app.py` and uses only the uploaded `backend/models/best_wild_animal_classifier_b3.pth` classifier. It installs CPU-only PyTorch, limits inference to one thread, and uses half precision to reduce memory. It does not need Modal or an external inference URL.
+The Render Blueprint runs `backend/full_app.py` through `backend/app.py`. MegaDetector V6 (`MDV6-apa-rtdetr-e`) locates animals and returns bounding boxes; the uploaded `backend/models/best_wild_animal_classifier_b3.pth` then classifies each detected crop. The build installs CPU-only PyTorch and downloads the licensed detector weights with `backend/download_detector.py`. No external inference service is required.
 
-This checkpoint classifies one whole image among its 27 trained classes. It does not locate animals, return bounding boxes, or analyze video. Uploads are limited to 15 MB and 6 megapixels. The capability status therefore reports species classification as available and object detection as unavailable. The Render free service has ephemeral storage, so its SQLite history can be lost after a restart or redeploy.
+The full detector stack exceeded 1 GiB peak working set in a local test, so the Blueprint uses Render's Standard plan (2 GB RAM), not the 512 MB free plan. Render currently lists this 2 GB tier at $25/month; verify the price in your dashboard before deploying. The Vercel upload interface accepts images up to 15 MB. The classifier has 27 classes; animals outside them can be mislabeled. Neither model's confidence is a measured accuracy guarantee, and the classifier checkpoint has no supplied validation results. Render's filesystem is ephemeral, so its SQLite history can be lost after a restart or redeploy.
 
 Deploy with [render.yaml](./render.yaml). The Render service allows the Vercel origin `https://wildguard-ai-frontend.vercel.app` through `CORS_ORIGINS`.
 
@@ -34,7 +34,7 @@ python backend/full_app.py
 
 ## Deploy the frontend with Vercel
 
-Vercel hosts the static frontend; Render runs the lightweight PTH classifier API.
+Vercel hosts the static frontend; Render runs the detector and classifier API.
 
 1. The Render Blueprint sets `CORS_ORIGINS` to `https://wildguard-ai-frontend.vercel.app`.
 2. Import this repository into Vercel. It serves `index.html`, CSS, JavaScript and public assets as static files.
@@ -58,6 +58,7 @@ When Analyze is clicked, the browser requests the current location. If permissio
 Leaflet is loaded from unpkg and map tiles from the public OpenStreetMap tile service. Tile requests reveal the viewed map area and your IP address to that service. The map displays OpenStreetMap attribution and requests only normal visible tiles; the public tile service is best-effort, not intended for high-volume production use. Use a self-hosted or commercial tile provider if traffic grows. Keep this server bound to `127.0.0.1` and protect the database if the computer is shared. Map markers show upload locations, not the animal's exact position.
 
 The supplied EfficientNet-B3 checkpoint still does not include a validation set, so species scores are model outputs rather than measured accuracy. Missing model files or incompatible checkpoints cause an explicit startup error instead of fabricated predictions.
+# wildguard-ai
 # wildguard-ai
 # wildguard-ai
 # wildguard-ai

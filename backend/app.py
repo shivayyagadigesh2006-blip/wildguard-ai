@@ -1,6 +1,6 @@
-"""Default classifier-only FastAPI app for memory-constrained deployments."""
+"""Default FastAPI app with animal detection and crop classification."""
 
-from classifier_app import app
+from full_app import app
 
 
 if __name__ == "__main__":
