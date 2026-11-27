@@ -3,12 +3,12 @@
 
    BACKEND HOOKS
    -------------
-   The same-origin FastAPI server provides:
+   The FastAPI server provides:
      GET  {API_BASE}/api/health   -> per-capability status badges
      GET  {API_BASE}/api/dashboard -> recorded dashboard metrics
      GET  {API_BASE}/api/history  -> real analysis history
-     POST {API_BASE}/api/analyze  -> multipart media and optional browser upload coordinates,
-        per-animal boxes, crop classifications, and a note.
+     POST {API_BASE}/api/analyze  -> an uploaded image and optional browser coordinates;
+        classification and detection results depend on the backend's available models.
      GET  {API_BASE}/api/locations -> browser locations from locally recorded analyses.
    The interface never substitutes fabricated results when analysis is unavailable.
 
@@ -164,7 +164,7 @@ const fillBars = (root) => requestAnimationFrame(() => requestAnimationFrame(() 
 function renderResults(list) {
   const ul = $("#results");
   ul.innerHTML = list.length ? list.map((r) => `
-    <li><div class="res-top"><div><div class="res-name">${esc(r.species)}</div><div class="res-sci">${Number(r.count) || 0} confident detection${Number(r.count) === 1 ? "" : "s"}</div></div>
+    <li><div class="res-top"><div><div class="res-name">${esc(r.species)}</div><div class="res-sci">${esc(r.scientific || "Whole-image species match")}</div></div>
     <span class="res-pct">${pct(r.confidence)}%</span></div>
     <div class="bar" role="img" aria-label="Confidence ${pct(r.confidence)} percent"><i data-w="${pct(r.confidence)}"></i></div></li>`).join("")
     : `<li class="empty-state">No classification candidates are available.</li>`;
@@ -183,7 +183,7 @@ function renderDetections(detections, mediaType, imageSize) {
     return `<li><div class="detection-row"><strong>${esc(d.species || "Uncertain")}</strong><span>${pct(d.confidence)}%</span></div>
       <span class="detection-meta">${esc(frame)} · animal ${pct(d.detector_confidence)}% · box ${esc(box)}${d.needs_review ? ` · <b class="detection-review">review</b>` : ""}</span></li>`;
   }).join("") + (detections.length > 60 ? `<li class="detection-meta">Showing 60 of ${detections.length} detected instances.</li>` : "")
-    : `<li class="empty-state">No animals detected in the analyzed media.</li>`;
+    : `<li class="empty-state">${backend.caps.species && !backend.caps.detect ? "Species classification is image-wide; this model does not locate animal boxes." : "No animals detected in the analyzed media."}</li>`;
 
   const priorOverlay = $(".detection-overlay", media);
   if (priorOverlay) priorOverlay.remove();
@@ -324,17 +324,15 @@ function renderHistory(rows) {
   const drop = $("#drop"), input = $("#fileInput"), idle = $("#dropIdle"), prev = $("#dropPreview");
   const media = $("#previewMedia"), nameEl = $("#fileName"), btn = $("#analyzeBtn"), note = $("#analyzeNote");
   let file = null, objectUrl = null;
-  const MAX_MB = 200;
+  const MAX_MB = 15;
   const imageExtensions = new Set([".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"]);
-  const videoExtensions = new Set([".avi", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".webm"]);
 
   const setFile = (f) => {
     if (!f) return;
     const extension = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
-    const kind = imageExtensions.has(extension) ? "image" : videoExtensions.has(extension) ? "video" : "";
-    if (!kind) {
+    if (!imageExtensions.has(extension)) {
       clear(true);
-      note.textContent = "Unsupported file. Use JPG, PNG, BMP, TIFF, WebP, MP4, MOV, AVI, MKV, M4V, MPEG, MPG, or WebM.";
+      note.textContent = "Unsupported file. Upload a JPG, PNG, BMP, TIFF, or WebP image.";
       return;
     }
     if (f.size > MAX_MB * 1048576) {
@@ -343,20 +341,19 @@ function renderHistory(rows) {
       return;
     }
     clear(true); file = f; objectUrl = URL.createObjectURL(f);
-    media.innerHTML = kind === "image" ? `<img alt="Preview of ${esc(f.name)}" src="${objectUrl}">`
-      : kind === "video" ? `<video src="${objectUrl}" muted playsinline loop autoplay></video>`
-      : `<div class="audio-ph">Video file ready</div>`;
+    media.innerHTML = `<img alt="Preview of ${esc(f.name)}" src="${objectUrl}">`;
     nameEl.textContent = f.name;
     idle.hidden = true; prev.hidden = false; btn.disabled = false;
     note.textContent = !backend.online ? "Backend unavailable. Start the Python server before submitting."
-      : backend.caps.detect && backend.caps.species ? "Ready to submit for analysis."
-      : "Backend is online, but animal detection models are not configured.";
+      : backend.caps.species && backend.caps.detect ? "Ready for animal detection and species classification."
+      : backend.caps.species ? "Ready for whole-image species classification; no animal boxes are produced."
+      : "The species classifier is not configured on the backend.";
   };
   function clear(silent) {
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     file = null; objectUrl = null; media.innerHTML = ""; input.value = "";
     idle.hidden = false; prev.hidden = true; btn.disabled = true; drop.classList.remove("loading");
-    if (!silent) note.textContent = "Choose a file to begin.";
+    if (!silent) note.textContent = "Choose an image to begin.";
   }
   function getBrowserLocation() {
     if (!navigator.geolocation) {

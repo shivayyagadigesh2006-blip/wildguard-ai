@@ -1,6 +1,6 @@
-"""Default lightweight FastAPI app for memory-constrained deployments."""
+"""Default classifier-only FastAPI app for memory-constrained deployments."""
 
-from light_app import app
+from classifier_app import app
 
 
 if __name__ == "__main__":

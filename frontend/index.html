@@ -167,14 +167,14 @@
             <span class="cap-num">01</span>
             <svg class="cap-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="14" width="48" height="36" rx="4"/><path d="M8 24V14h10M56 24V14H46M8 40v10h10M56 40v10H46"/><circle cx="32" cy="32" r="8"/></svg>
             <div class="cap-main"><h3>Object Detection</h3><p class="cap-short">Locate individual animals and draw bounding boxes.</p>
-              <p class="cap-more">MegaDetector locates animal instances in each image or sampled video frame. The supplied classifier then labels each animal crop.</p></div>
+              <p class="cap-more">Object detection is not enabled in the Render classifier-only deployment. The uploaded EfficientNet model classifies a whole image and cannot locate animals or draw boxes.</p></div>
             <span class="badge" data-badge>Backend pending</span><i class="chev" aria-hidden="true"></i>
           </article>
           <article class="cap reveal" tabindex="0" data-cap="species">
             <span class="cap-num">02</span>
             <svg class="cap-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8c-9 5-15 13-15 22 0 8 6 14 15 18 9-4 15-10 15-18 0-9-6-17-15-22z"/><path d="M32 16v36M32 26l-8-5M32 33l9-6M32 40l-8-5"/></svg>
             <div class="cap-main"><h3>Species Classification</h3><p class="cap-short">Recognize species with computer vision.</p>
-              <p class="cap-more">Classifies each detected animal crop among the supplied model's 27 classes. Predictions are suggestions, not confirmed identifications.</p></div>
+              <p class="cap-more">Classifies the whole uploaded image among the supplied model's 27 classes. Predictions are suggestions, not confirmed identifications.</p></div>
             <span class="badge" data-badge>Backend pending</span><i class="chev" aria-hidden="true"></i>
           </article>
           <article class="cap reveal" tabindex="0" data-cap="audio">
@@ -231,12 +231,12 @@
 
             <section class="panel p-upload">
               <header><h3>Upload for analysis</h3><span class="tag">Model required</span></header>
-              <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload a wildlife image or video file">
-                <input type="file" id="fileInput" accept=".bmp,.jpeg,.jpg,.png,.tif,.tiff,.webp,.avi,.m4v,.mkv,.mov,.mp4,.mpeg,.mpg,.webm" hidden />
+              <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload a wildlife image">
+                <input type="file" id="fileInput" accept=".bmp,.jpeg,.jpg,.png,.tif,.tiff,.webp" hidden />
                 <div class="drop-idle" id="dropIdle">
                   <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><path d="M24 32V10M15 19l9-9 9 9M8 34v4a2 2 0 002 2h28a2 2 0 002-2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   <p><strong>Drop a file here</strong> or click to browse</p>
-                  <small>Image or video · analysis requires the local detector and classifier models</small>
+                  <small>Image only · whole-image species classification, no animal boxes · max 15 MB</small>
                 </div>
                 <div class="drop-preview" id="dropPreview" hidden>
                   <div class="preview-media" id="previewMedia"></div>
@@ -246,11 +246,11 @@
               </div>
               <button class="btn btn-solid btn-block" id="analyzeBtn" type="button" disabled>Analyze file</button>
               <p class="micro">Analyzing requests your browser location. Allow permission to add the upload spot to the local map; the animal's exact position is not inferred.</p>
-              <p class="micro" id="analyzeNote" role="status">Choose an image or video to begin.</p>
+              <p class="micro" id="analyzeNote" role="status">Choose an image to begin.</p>
             </section>
 
             <section class="panel p-species">
-              <header><h3>Species by detected animal</h3><span class="tag" id="resultTag">No data</span></header>
+              <header><h3>Whole-image species matches</h3><span class="tag" id="resultTag">No data</span></header>
               <ul class="results" id="results"><li class="empty-state">No classification results yet.</li></ul>
               <h4 class="subheading">Animal instances</h4>
               <ul class="detections" id="detectedAnimals"><li class="empty-state">No detections yet.</li></ul>

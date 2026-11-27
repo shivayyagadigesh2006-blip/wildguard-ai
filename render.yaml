@@ -11,7 +11,7 @@ services:
         value: 3.11.9
       - key: CORS_ORIGINS
         value: https://wildguard-ai-frontend.vercel.app
-      - key: INFERENCE_API_URL
-        sync: false
-      - key: INFERENCE_API_KEY
-        sync: false
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: MKL_NUM_THREADS
+        value: "1"
