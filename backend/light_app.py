@@ -53,14 +53,15 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(title="WildGuard AI Lightweight API", version="1.0.0", lifespan=lifespan)
 
-cors_origins = [
+cors_origins = {"https://wildguard-ai-frontend.vercel.app"}
+cors_origins.update(
     origin.strip()
     for origin in os.getenv(
         "CORS_ORIGINS",
         "http://127.0.0.1:8001,http://localhost:8001",
     ).split(",")
     if origin.strip()
-]
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
