@@ -7,9 +7,9 @@ From the repository root, create and activate a virtual environment, install the
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r backend/requirements.txt
+python -m pip install -r backend/requirements-full.txt
 python backend/download_detector.py
-python backend/app.py
+python backend/full_app.py
 ```
 
 Open [http://127.0.0.1:8001](http://127.0.0.1:8001). Use this address rather than opening `index.html` directly or serving it from a separate Live Server; the Python server serves the page, its JavaScript and CSS, and the `/api` endpoints from one origin. The 3D Studio additionally loads three.js and its model assets from the configured CDN.
@@ -18,16 +18,16 @@ Animal detection and species classification use the local models; uploaded image
 
 ## Lightweight Render deployment
 
-The Render Blueprint uses `backend/light_app.py` and `backend/requirements-light.txt`. It avoids downloading the 286 MB detector and does not install Torch, OpenCV, or the full AI dependency stack. The lightweight service keeps the health, dashboard, history, and locations endpoints available, but `/api/analyze` responds with HTTP 503 because inference is disabled.
+The Render Blueprint uses the lightweight `backend/app.py` and `backend/requirements.txt`. It avoids downloading the 286 MB detector and does not install Torch, OpenCV, or the full AI dependency stack. The lightweight service keeps the health, dashboard, history, and locations endpoints available, but `/api/analyze` responds with HTTP 503 because inference is disabled. `app.py` is deliberately lightweight so a Render service using the common `uvicorn app:app` command will not load the AI models.
 
 Deploy with Render Blueprint using [render.yaml](./render.yaml). Set `CORS_ORIGINS` to your Vercel origin (for example `https://wildguard-ai.vercel.app`). A Render free service has ephemeral storage, so its SQLite history can be lost when the service restarts or redeploys.
 
 To run the full AI backend locally, install the full requirements and model files:
 
 ```powershell
-python -m pip install -r backend/requirements.txt
+python -m pip install -r backend/requirements-full.txt
 python backend/download_detector.py
-python backend/app.py
+python backend/full_app.py
 ```
 
 The full backend includes Torch and both wildlife models and therefore exceeds the lightweight Render footprint.
@@ -58,5 +58,6 @@ When Analyze is clicked, the browser requests the current location. If permissio
 Leaflet is loaded from unpkg and map tiles from the public OpenStreetMap tile service. Tile requests reveal the viewed map area and your IP address to that service. The map displays OpenStreetMap attribution and requests only normal visible tiles; the public tile service is best-effort, not intended for high-volume production use. Use a self-hosted or commercial tile provider if traffic grows. Keep this server bound to `127.0.0.1` and protect the database if the computer is shared. Map markers show upload locations, not the animal's exact position.
 
 The supplied EfficientNet-B3 checkpoint still does not include a validation set, so species scores are model outputs rather than measured accuracy. Missing model files or incompatible checkpoints cause an explicit startup error instead of fabricated predictions.
+# wildguard-ai
 # wildguard-ai
 # wildguard-ai
