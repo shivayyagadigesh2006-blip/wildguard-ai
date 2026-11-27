@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WildGuard AI — Where Technology Protects the Wild</title>
+  <meta name="description" content="WildGuard AI turns wildlife observation into conservation intelligence with multimodal artificial intelligence." />
+  <meta name="theme-color" content="#102A20" />
+  <meta name="wildguard-api-base" content="" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23102A20'/%3E%3Cpath d='M16 5c-5 3-8 8-8 13 0 4 3 7 8 9 5-2 8-5 8-9 0-5-3-10-8-13z' fill='none' stroke='%23D6AC63' stroke-width='1.6'/%3E%3Ccircle cx='16' cy='17' r='2.2' fill='%23D6AC63'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    /* Image loader: tries the local file, then Wikimedia's direct URL, then Special:FilePath. Hides itself if all fail. */
+    window.wgImg = { err: function (img) {
+      var list = (img.getAttribute("data-srcs") || "").split("|"), i = +img.getAttribute("data-i") + 1;
+      if (i < list.length) { img.setAttribute("data-i", i); img.src = list[i]; } else { img.classList.add("failed"); }
+    } };
+  </script>
+  <link rel="stylesheet" href="Style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <!-- ============ NAVIGATION ============ -->
+  <nav class="nav" id="nav" aria-label="Primary">
+    <a class="logo" href="#top" aria-label="WildGuard AI home">
+      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M16 3C10 7 6.5 12 6.5 18c0 5 4 9 9.5 11 5.500-2 9.500-6 9.500-11C25.500 12 22 7 16 3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M16 9v17M16 15l-4-3M16 19l5-3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".7"/></svg>
+      <span>WildGuard <em>AI</em></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks" aria-label="Toggle menu"><span></span><span></span></button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#monitoring">AI Monitoring</a></li>
+      <li><a href="#species">Species</a></li>
+      <li><a href="#explore">3D Studio</a></li>
+      <li><a href="#conservation">Conservation</a></li>
+      <li><a class="btn btn-nav" href="#dashboard">Launch Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <header class="hero" id="top">
+    <div class="hero-media"><img class="hero-photo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Elephas_maximus_maximus_-_01.jpg/1920px-Elephas_maximus_maximus_-_01.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Elephas_maximus_maximus_-_01.jpg/1920px-Elephas_maximus_maximus_-_01.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Elephas_maximus_maximus_-_01.jpg?width=1920|images/hero.jpg" data-i="0" alt="" decoding="async" referrerpolicy="no-referrer" onerror="wgImg.err(this)" fetchpriority="high" style="object-position:50% 55%"></div>
+    <div class="hero-shade"></div>
+    <canvas id="particles" aria-hidden="true"></canvas>
+    <div class="hero-inner" id="overview">
+      <p class="eyebrow light fade" style="--d:.1s"><i></i>Intelligence for a wilder world</p>
+      <h1 class="hero-title fade" style="--d:.25s">Discover the Wild.<br /><em>Protect Its Future.</em></h1>
+      <p class="hero-lede fade" style="--d:.45s">Multimodal artificial intelligence transforming wildlife observation into actionable conservation intelligence.</p>
+      <div class="hero-actions fade" style="--d:.6s">
+        <a class="btn btn-ivory" href="#monitoring">Explore Wildlife Intelligence <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="link-arrow" href="#conservation">Discover Our Mission</a>
+      </div>
+    </div>
+    <div class="hero-foot">
+      <a class="credit" href="https://commons.wikimedia.org/wiki/File:Elephas_maximus_maximus_-_01.jpg" target="_blank" rel="noopener" aria-label="View source of the hero photo on Wikimedia Commons (opens in a new tab)">Asian elephants, Minneriya, Sri Lanka · Photo: Wikimedia Commons</a>
+      <a class="scroll-cue" href="#species" aria-label="Scroll to species"><span>Scroll</span><i></i></a>
+    </div>
+  </header>
+
+  <div class="ticker" aria-hidden="true"><div class="ticker-track" id="tickerTrack"></div></div>
+
+  <main id="main">
+
+    <!-- ============ SPECIES ============ -->
+    <section class="section" id="species">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow">Field notes</p>
+            <h2>Every Wild Life <em>Tells a Story.</em></h2>
+          </div>
+          <p class="lede">Behind every detection is an animal with a range, a routine and a role in its ecosystem. Understanding them is where protection begins.</p>
+        </div>
+
+        <div class="gallery">
+          <figure class="g g-tiger reveal">
+            <div class="photo" role="img" aria-label="Female Bengal tiger in Kanha National Park, India"><img class="img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg/1280px-Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg/1280px-Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg?width=1280|images/tiger.jpg" data-i="0" alt="" decoding="async" referrerpolicy="no-referrer" onerror="wgImg.err(this)" loading="lazy" style="object-position:50% 45%"></div>
+            <figcaption><div><h3>Bengal Tiger</h3><p class="sci">Panthera tigris tigris</p></div><p>No two tigers share the same stripe pattern, so camera-trap photographs can identify individual animals.</p></figcaption>
+          </figure>
+          <figure class="g g-elephant reveal">
+            <div class="photo" role="img" aria-label="Asian elephant walking through a river at golden hour"><img class="img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg/1280px-Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg/1280px-Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg?width=1280|images/elephant.jpg" data-i="0" alt="" decoding="async" referrerpolicy="no-referrer" onerror="wgImg.err(this)" loading="lazy" style="object-position:60% 50%"></div>
+            <figcaption><div><h3>Asian Elephant</h3><p class="sci">Elephas maximus</p></div><p>Elephants carry seeds across vast distances and open paths that other forest species use.</p></figcaption>
+          </figure>
+          <figure class="g g-leopard reveal">
+            <div class="photo" role="img" aria-label="Young female leopard in Kruger National Park"><img class="img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg/1280px-Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg/1280px-Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg?width=1280|images/leopard.jpg" data-i="0" alt="" decoding="async" referrerpolicy="no-referrer" onerror="wgImg.err(this)" loading="lazy"></div>
+            <figcaption><div><h3>Leopard</h3><p class="sci">Panthera pardus</p></div><p>Among the most adaptable big cats, leopards live closer to people than almost any other.</p></figcaption>
+          </figure>
+          <figure class="g g-deer reveal">
+            <div class="photo" role="img" aria-label="Chital stag browsing on a misty morning in Nagarhole"><img class="img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Axis_axis_%28Nagarhole%2C_2010%29.jpg/1280px-Axis_axis_%28Nagarhole%2C_2010%29.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Axis_axis_%28Nagarhole%2C_2010%29.jpg/1280px-Axis_axis_%28Nagarhole%2C_2010%29.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Axis_axis_%28Nagarhole%2C_2010%29.jpg?width=1280|images/chital.jpg" data-i="0" alt="" decoding="async" referrerpolicy="no-referrer" onerror="wgImg.err(this)" loading="lazy"></div>
+            <figcaption><div><h3>Chital</h3><p class="sci">Axis axis</p></div><p>Chital often graze beneath langur troops, which drop fruit and raise the alarm when predators approach.</p></figcaption>
+          </figure>
+          <figure class="g g-bird reveal">
+            <div class="photo" role="img" aria-label="Male great hornbill with a golden casque"><img class="img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg/1280px-Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg/1280px-Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg?width=1280|images/hornbill.jpg" data-i="0" alt="" decoding="async" referrerpolicy="no-referrer" onerror="wgImg.err(this)" loading="lazy"></div>
+            <figcaption><div><h3>Great Hornbill</h3><p class="sci">Buceros bicornis</p></div><p>Hornbills swallow large fruits whole and plant the next generation of canopy trees.</p></figcaption>
+          </figure>
+        </div>
+        <p class="footnote reveal">Conservation statuses change as assessments are updated. Check the IUCN Red List for each species' current classification.</p>
+      </div>
+    </section>
+
+
+    <!-- ============ 3D EXPLORE ============ -->
+    <section class="section dark explore" id="explore">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow light"><i></i>Three dimensions</p>
+            <h2>Step Closer. <em>Turn Every Wild Life Around.</em></h2>
+          </div>
+          <p class="lede">Drag the ring of real wildlife photographs, then pick up an animated 3D animal and look at it from every angle.</p>
+        </div>
+
+        <div class="ring-wrap reveal">
+          <div class="ring-stage" id="ringStage" tabindex="0" role="group" aria-roledescription="carousel" aria-label="3D species carousel. Drag, or use the left and right arrow keys.">
+            <div class="ring" id="ring"><figure class="ring-card" data-name="Bengal Tiger" data-sci="Panthera tigris tigris" data-fact="No two tigers share the same stripe pattern, so camera-trap photographs can identify individual animals." aria-label="Female Bengal tiger"><img class="ring-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg/960px-Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg/960px-Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg?width=960|images/tiger.jpg" data-i="0" alt="" decoding="async" draggable="false" referrerpolicy="no-referrer" onerror="wgImg.err(this)"></figure><figure class="ring-card" data-name="Asian Elephant" data-sci="Elephas maximus" data-fact="Elephants carry seeds across vast distances and open paths that other forest species use." aria-label="Asian elephant in a river"><img class="ring-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg/960px-Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg/960px-Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg?width=960|images/elephant.jpg" data-i="0" alt="" decoding="async" draggable="false" referrerpolicy="no-referrer" onerror="wgImg.err(this)"></figure><figure class="ring-card" data-name="Leopard" data-sci="Panthera pardus" data-fact="Among the most adaptable big cats, leopards live closer to people than almost any other." aria-label="Young leopard"><img class="ring-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg/960px-Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg/960px-Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg?width=960|images/leopard.jpg" data-i="0" alt="" decoding="async" draggable="false" referrerpolicy="no-referrer" onerror="wgImg.err(this)"></figure><figure class="ring-card" data-name="Chital" data-sci="Axis axis" data-fact="Chital often graze beneath langur troops, which drop fruit and raise the alarm when predators approach." aria-label="Chital stag"><img class="ring-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Axis_axis_%28Nagarhole%2C_2010%29.jpg/960px-Axis_axis_%28Nagarhole%2C_2010%29.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Axis_axis_%28Nagarhole%2C_2010%29.jpg/960px-Axis_axis_%28Nagarhole%2C_2010%29.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Axis_axis_%28Nagarhole%2C_2010%29.jpg?width=960|images/chital.jpg" data-i="0" alt="" decoding="async" draggable="false" referrerpolicy="no-referrer" onerror="wgImg.err(this)"></figure><figure class="ring-card" data-name="Great Hornbill" data-sci="Buceros bicornis" data-fact="Hornbills swallow large fruits whole and plant the next generation of canopy trees." aria-label="Great hornbill"><img class="ring-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg/960px-Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg/960px-Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg?width=960|images/hornbill.jpg" data-i="0" alt="" decoding="async" draggable="false" referrerpolicy="no-referrer" onerror="wgImg.err(this)"></figure></div>
+          </div>
+          <div class="ring-info" id="ringInfo" aria-live="polite">
+            <h3 id="ringName"></h3><p class="sci" id="ringSci"></p><p class="ring-fact" id="ringFact"></p>
+          </div>
+          <div class="ring-ctrl">
+            <button class="round" id="ringPrev" type="button" aria-label="Previous species"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="dots" id="ringDots"></div>
+            <button class="round" id="ringNext" type="button" aria-label="Next species"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </div>
+
+        <div class="studio reveal" id="studio">
+          <div class="studio-canvas" id="studioCanvas">
+            <canvas id="studioGL" aria-label="Interactive 3D animal model. Drag to rotate." role="img"></canvas>
+            <div class="studio-msg" id="studioMsg" role="status"><span class="spin-lg"></span><p>Loading the 3D studio…</p></div>
+            <p class="studio-hint" id="studioHint">Drag to rotate</p>
+          </div>
+          <aside class="studio-panel">
+            <p class="eyebrow light"><i></i>3D studio</p>
+            <h3 id="studioName">Flamingo</h3>
+            <p class="sci" id="studioSci"></p>
+            <p class="studio-desc" id="studioDesc"></p>
+            <div class="studio-tabs" id="studioTabs" role="tablist" aria-label="Choose an animal"></div>
+            <label class="switch"><input type="checkbox" id="autoRotate" checked /><span></span>Auto-rotate</label>
+            <p class="micro">Explore the available 3D wildlife models. Add a local <code>.glb</code> file to the model list in <code>Studio.js</code> to include another species.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AI CAPABILITIES ============ -->
+    <section class="section dark" id="monitoring">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow light"><i></i>AI monitoring</p>
+            <h2>Nature, Observed <em>Through Intelligence.</em></h2>
+          </div>
+          <div>
+            <p class="lede">Four capabilities designed to work together. Each shows its true status: nothing is marked live until the backend answers.</p>
+            <p class="api-state" id="apiState" role="status"><i></i><span>Checking for backend…</span></p>
+          </div>
+        </div>
+
+        <div class="caps" id="caps">
+          <article class="cap reveal" tabindex="0" data-cap="detect">
+            <span class="cap-num">01</span>
+            <svg class="cap-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="14" width="48" height="36" rx="4"/><path d="M8 24V14h10M56 24V14H46M8 40v10h10M56 40v10H46"/><circle cx="32" cy="32" r="8"/></svg>
+            <div class="cap-main"><h3>Object Detection</h3><p class="cap-short">Locate individual animals and draw bounding boxes.</p>
+              <p class="cap-more">MegaDetector locates animal instances in each image or sampled video frame. The supplied classifier then labels each animal crop.</p></div>
+            <span class="badge" data-badge>Backend pending</span><i class="chev" aria-hidden="true"></i>
+          </article>
+          <article class="cap reveal" tabindex="0" data-cap="species">
+            <span class="cap-num">02</span>
+            <svg class="cap-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8c-9 5-15 13-15 22 0 8 6 14 15 18 9-4 15-10 15-18 0-9-6-17-15-22z"/><path d="M32 16v36M32 26l-8-5M32 33l9-6M32 40l-8-5"/></svg>
+            <div class="cap-main"><h3>Species Classification</h3><p class="cap-short">Recognize species with computer vision.</p>
+              <p class="cap-more">Classifies each detected animal crop among the supplied model's 27 classes. Predictions are suggestions, not confirmed identifications.</p></div>
+            <span class="badge" data-badge>Backend pending</span><i class="chev" aria-hidden="true"></i>
+          </article>
+          <article class="cap reveal" tabindex="0" data-cap="audio">
+            <span class="cap-num">03</span>
+            <svg class="cap-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M16 24v16M24 16v32M32 22v20M40 12v40M48 24v16"/></svg>
+            <div class="cap-main"><h3>Acoustic Intelligence</h3><p class="cap-short">Identify calls and wildlife sounds.</p>
+              <p class="cap-more">Listens to field recordings and flags calls from birds, mammals and amphibians, including animals the camera never sees.</p></div>
+            <span class="badge" data-badge>Backend pending</span><i class="chev" aria-hidden="true"></i>
+          </article>
+          <article class="cap reveal" tabindex="0" data-cap="assistant">
+            <span class="cap-num">04</span>
+            <svg class="cap-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 12h44a2 2 0 012 2v28a2 2 0 01-2 2H30l-12 10V44h-8a2 2 0 01-2-2V14a2 2 0 012-2z"/><path d="M32 36c-6-3-8-6-8-10a5 5 0 018-4 5 5 0 018 4c0 4-2 7-8 10z"/></svg>
+            <div class="cap-main"><h3>Wildlife Knowledge Assistant</h3><p class="cap-short">Grounded species facts and conservation insight.</p>
+              <p class="cap-more">Answers questions about a species using cited reference material, and says so when it does not know.</p></div>
+            <span class="badge" data-badge>Backend pending</span><i class="chev" aria-hidden="true"></i>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section class="section tint" id="dashboard">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow">Monitoring interface</p>
+            <h2>The Field Station, <em>at a Glance.</em></h2>
+          </div>
+          <p class="lede">Connect analysis models to review uploads, detections, species results and history in one place.</p>
+        </div>
+
+        <div class="dash reveal" aria-label="Wildlife monitoring dashboard">
+          <div class="dash-bar">
+            <div class="dash-title"><i class="dot"></i>Wildlife monitoring <span class="tag">Live workspace</span></div>
+            <div class="dash-actions"><span class="chip">All recorded analyses</span><span class="chip" id="connChip">Connecting…</span></div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><span class="stat-label">Confident animal detections</span><span class="stat-num" id="totalPredictions">0</span><span class="stat-note">recorded</span></div>
+            <div class="stat"><span class="stat-label">Species identified</span><span class="stat-num" id="speciesIdentified">0</span><span class="stat-note">recorded</span></div>
+            <div class="stat"><span class="stat-label">Analysis sessions</span><span class="stat-num" id="analysisSessions">0</span><span class="stat-note">recorded</span></div>
+            <div class="stat"><span class="stat-label">Average confidence</span><span class="stat-num" id="averageConfidence">—</span><span class="stat-note">no results yet</span></div>
+          </div>
+
+          <div class="dash-grid">
+            <section class="panel p-map">
+              <header><h3>Live observation map</h3><span class="tag" id="locationCount">Loading…</span></header>
+              <div id="analysisMap" class="leaflet-map" role="region" aria-label="Interactive map of browser upload locations">
+                <p class="empty-state">Loading interactive map…</p>
+              </div>
+              <p class="micro map-privacy">Markers show where uploads were analyzed, not animal movement or the animal's exact position. OpenStreetMap tiles are loaded externally and may reveal the viewed area and your IP address.</p>
+              <ul class="location-records" id="locationRecords"><li class="empty-state">No browser upload locations yet.</li></ul>
+            </section>
+
+            <section class="panel p-upload">
+              <header><h3>Upload for analysis</h3><span class="tag">Model required</span></header>
+              <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload a wildlife image or video file">
+                <input type="file" id="fileInput" accept=".bmp,.jpeg,.jpg,.png,.tif,.tiff,.webp,.avi,.m4v,.mkv,.mov,.mp4,.mpeg,.mpg,.webm" hidden />
+                <div class="drop-idle" id="dropIdle">
+                  <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><path d="M24 32V10M15 19l9-9 9 9M8 34v4a2 2 0 002 2h28a2 2 0 002-2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <p><strong>Drop a file here</strong> or click to browse</p>
+                  <small>Image or video · analysis requires the local detector and classifier models</small>
+                </div>
+                <div class="drop-preview" id="dropPreview" hidden>
+                  <div class="preview-media" id="previewMedia"></div>
+                  <div class="scanline" aria-hidden="true"></div>
+                  <div class="preview-meta"><span id="fileName"></span><button class="link-btn" id="clearFile" type="button">Remove</button></div>
+                </div>
+              </div>
+              <button class="btn btn-solid btn-block" id="analyzeBtn" type="button" disabled>Analyze file</button>
+              <p class="micro">Analyzing requests your browser location. Allow permission to add the upload spot to the local map; the animal's exact position is not inferred.</p>
+              <p class="micro" id="analyzeNote" role="status">Choose an image or video to begin.</p>
+            </section>
+
+            <section class="panel p-species">
+              <header><h3>Species by detected animal</h3><span class="tag" id="resultTag">No data</span></header>
+              <ul class="results" id="results"><li class="empty-state">No classification results yet.</li></ul>
+              <h4 class="subheading">Animal instances</h4>
+              <ul class="detections" id="detectedAnimals"><li class="empty-state">No detections yet.</li></ul>
+              <p class="micro">Confidence is a model score, not a measured accuracy.</p>
+            </section>
+
+            <section class="panel p-audio">
+              <header><h3>Audio analysis</h3><span class="tag">Not enabled</span></header>
+              <ul class="calls" id="calls"><li class="empty-state">No audio classifier is configured.</li></ul>
+            </section>
+
+            <section class="panel p-history">
+              <header><h3>Recent analysis history</h3><span class="tag">Recorded data</span></header>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th scope="col">File</th><th scope="col">Type</th><th scope="col">Top result</th><th scope="col">Confidence</th><th scope="col">Status</th></tr></thead>
+                  <tbody id="history"><tr><td colspan="5" class="empty-state">No analyses recorded yet.</td></tr></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CONSERVATION ============ -->
+    <section class="section" id="conservation">
+      <div class="wrap split">
+        <figure class="impact-photo-wrap reveal">
+          <div class="photo tall" role="img" aria-label="Sri Lankan elephant mother and calf"><img class="img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Sri_Lankan_elephant_%28Elephas_maximus_maximus%29_female_and_young_6.jpg/1920px-Sri_Lankan_elephant_%28Elephas_maximus_maximus%29_female_and_young_6.jpg" data-srcs="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Sri_Lankan_elephant_%28Elephas_maximus_maximus%29_female_and_young_6.jpg/1920px-Sri_Lankan_elephant_%28Elephas_maximus_maximus%29_female_and_young_6.jpg|https://commons.wikimedia.org/wiki/Special:FilePath/Sri_Lankan_elephant_%28Elephas_maximus_maximus%29_female_and_young_6.jpg?width=1920|images/impact.jpg" data-i="0" alt="" decoding="async" referrerpolicy="no-referrer" onerror="wgImg.err(this)" loading="lazy" style="object-position:50% 40%"></div>
+          <figcaption><a class="credit dark" href="https://commons.wikimedia.org/wiki/File:Sri_Lankan_elephant_%28Elephas_maximus_maximus%29_female_and_young_6.jpg" target="_blank" rel="noopener" aria-label="View source of this photo on Wikimedia Commons (opens in a new tab)">Elephant and calf, Yala, Sri Lanka · Photo: Wikimedia Commons</a></figcaption>
+        </figure>
+        <div class="impact-copy">
+          <div class="reveal">
+            <p class="eyebrow">Conservation</p>
+            <h2>Technology in Service <em>of the Wild.</em></h2>
+            <p class="lede">AI will not protect a forest on its own. It can help the people who do, by making observation faster, wider and easier to share.</p>
+          </div>
+          <ol class="themes">
+            <li class="theme reveal"><span class="t-num">01</span><div><h3>Observe biodiversity</h3><p>Turn thousands of camera-trap images and field recordings into a clear picture of which species live where.</p></div></li>
+            <li class="theme reveal"><span class="t-num">02</span><div><h3>Understand animal behavior</h3><p>Follow how animals feed, rest and move through a landscape across seasons, not just in single sightings.</p></div></li>
+            <li class="theme reveal"><span class="t-num">03</span><div><h3>Support conservation decisions</h3><p>Give rangers, researchers and planners evidence they can question, verify and act on.</p></div></li>
+          </ol>
+          <p class="footnote reveal">WildGuard AI is a research and monitoring aid. Its outputs should be reviewed by qualified people before informing any decision.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <div class="f-brand">
+        <a class="logo" href="#top"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M16 3C10 7 6.5 12 6.5 18c0 5 4 9 9.5 11 5.5-2 9.5-6 9.5-11C25.5 12 22 7 16 3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M16 9v17" stroke="currentColor" stroke-width="1.2" opacity=".7"/></svg><span>WildGuard <em>AI</em></span></a>
+        <p>An open conservation-technology project exploring how computer vision, sound analysis and grounded language models can help people understand wildlife.</p>
+      </div>
+      <nav class="f-col" aria-label="Footer navigation"><h4>Explore</h4><a href="#overview">Overview</a><a href="#monitoring">AI Monitoring</a><a href="#species">Species</a><a href="#conservation">Conservation</a></nav>
+      <div class="f-col"><h4>Capabilities</h4><a href="#monitoring">Animal detection</a><a href="#monitoring">Species classification</a><a href="#monitoring">Behavior recognition</a><a href="#monitoring">Acoustic intelligence</a><a href="#monitoring">Knowledge assistant</a></div>
+      <div class="f-col"><h4>Project</h4><a href="#dashboard">Monitoring dashboard</a><span>Front end: HTML, CSS, JavaScript</span><span>Backend: Python FastAPI</span></div>
+    </div>
+    <div class="wrap credits"><h4>Photo credits</h4><p>All photographs are from Wikimedia Commons under open licenses (mostly Creative Commons). Each link opens the file page with the full author and license details.</p><ul><li><a href="https://commons.wikimedia.org/wiki/File:Elephas_maximus_maximus_-_01.jpg" target="_blank" rel="noopener">Asian elephants, Minneriya</a> — Kadellar</li><li><a href="https://commons.wikimedia.org/wiki/File:Bengal_tiger_%28Panthera_tigris_tigris%29_female_3.jpg" target="_blank" rel="noopener">Bengal tiger, Kanha</a> — Charles J. Sharp, CC BY-SA 4.0</li><li><a href="https://commons.wikimedia.org/wiki/File:Asian_elephant_walking_in_Tad_Lo_river_at_golden_hour%2C_Bolaven_Plateau%2C_Laos.jpg" target="_blank" rel="noopener">Asian elephant, Tad Lo</a> — Basile Morin</li><li><a href="https://commons.wikimedia.org/wiki/File:Leopard_%28Panthera_pardus_pardus%29_young_female_Kruger.jpg" target="_blank" rel="noopener">Leopard, Kruger</a></li><li><a href="https://commons.wikimedia.org/wiki/File:Axis_axis_%28Nagarhole%2C_2010%29.jpg" target="_blank" rel="noopener">Chital, Nagarhole</a></li><li><a href="https://commons.wikimedia.org/wiki/File:Great_Hornbill_%28male%29_2_by_N.A._Nazeer.jpg" target="_blank" rel="noopener">Great hornbill</a> — N.A. Nazeer</li><li><a href="https://commons.wikimedia.org/wiki/File:Sri_Lankan_elephant_%28Elephas_maximus_maximus%29_female_and_young_6.jpg" target="_blank" rel="noopener">Elephant and calf, Yala</a> — Charles J. Sharp</li></ul><p class="credit-3d">3D models: Flamingo, Parrot, Stork and Horse from the three.js examples (modeled by mirada, CC BY 3.0). 3D engine: three.js (MIT license).</p></div>
+    <div class="wrap footer-end">
+      <p class="closing">The future of wildlife begins with understanding.</p>
+      <p class="legal">© <span id="year">2026</span> WildGuard AI.</p>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="Script.js"></script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+  <script type="module" src="Studio.js"></script>
+</body>
+</html>
