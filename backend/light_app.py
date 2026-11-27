@@ -1,19 +1,26 @@
 """Lightweight API for deployments that cannot host the AI inference models."""
 
 import json
+import logging
 import os
 import sqlite3
 from contextlib import asynccontextmanager, closing
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, BinaryIO, Mapping
 
-from fastapi import FastAPI, HTTPException, Query
+import httpx
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 ROOT = Path(__file__).resolve().parent
 DATABASE_PATH = Path(
     os.getenv("DATABASE_PATH", str(ROOT / "data" / "wildguard.sqlite3"))
 ).resolve()
+INFERENCE_API_URL = os.getenv("INFERENCE_API_URL", "").rstrip("/")
+INFERENCE_API_KEY = os.getenv("INFERENCE_API_KEY", "")
+_HTTP_CLIENT: httpx.AsyncClient | None = None
+_LOGGER = logging.getLogger(__name__)
 
 
 def _connect_database() -> sqlite3.Connection:
@@ -47,8 +54,18 @@ def _initialize_database() -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    global _HTTP_CLIENT
     _initialize_database()
-    yield
+    if INFERENCE_API_URL and not INFERENCE_API_KEY:
+        raise RuntimeError("INFERENCE_API_KEY is required when INFERENCE_API_URL is configured.")
+    if INFERENCE_API_URL:
+        _HTTP_CLIENT = httpx.AsyncClient(headers={"X-API-Key": INFERENCE_API_KEY})
+    try:
+        yield
+    finally:
+        if _HTTP_CLIENT is not None:
+            await _HTTP_CLIENT.aclose()
+            _HTTP_CLIENT = None
 
 
 app = FastAPI(title="WildGuard AI Lightweight API", version="1.0.0", lifespan=lifespan)
@@ -71,18 +88,99 @@ app.add_middleware(
 )
 
 
+async def _request_inference(
+    method: str,
+    path: str,
+    *,
+    params: Mapping[str, str | int] | None = None,
+    files: Mapping[str, tuple[str, BinaryIO, str]] | None = None,
+    data: Mapping[str, str] | None = None,
+    timeout: float | httpx.Timeout = 30.0,
+) -> Any:
+    if _HTTP_CLIENT is None:
+        raise HTTPException(
+            status_code=503,
+            detail="External AI inference is not configured on this deployment.",
+        )
+
+    try:
+        response = await _HTTP_CLIENT.request(
+            method,
+            f"{INFERENCE_API_URL}{path}",
+            params=params,
+            files=files,
+            data=data,
+            timeout=timeout,
+        )
+    except httpx.TimeoutException as exc:
+        _LOGGER.warning("External AI inference timed out on %s.", path)
+        raise HTTPException(status_code=504, detail="External AI inference timed out.") from exc
+    except httpx.RequestError as exc:
+        _LOGGER.error("External AI inference request failed on %s: %s", path, exc)
+        raise HTTPException(
+            status_code=502,
+            detail="External AI inference service is unavailable.",
+        ) from exc
+
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        _LOGGER.error("External AI inference returned invalid JSON on %s.", path)
+        raise HTTPException(
+            status_code=502,
+            detail="External AI inference service returned an invalid response.",
+        ) from exc
+    if response.is_error:
+        detail = payload.get("detail", "External AI inference request failed.") if isinstance(payload, dict) else payload
+        raise HTTPException(status_code=response.status_code, detail=detail)
+    return payload
+
+
+def _record_analysis(name: str, media_type: str, result: Mapping[str, Any]) -> None:
+    location = result.get("location")
+    if not isinstance(location, dict):
+        location = {}
+    with closing(_connect_database()) as connection:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO analyses
+                    (name, media_type, created_at, predictions_json, candidates_json, sampled_frames,
+                     detections_json, latitude, longitude, location_source)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    name[:255],
+                    media_type,
+                    datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                    json.dumps(result.get("predictions", [])),
+                    json.dumps(result.get("candidates", [])),
+                    int(result.get("sampled_frames", 0)),
+                    json.dumps(result.get("detections", [])),
+                    location.get("latitude"),
+                    location.get("longitude"),
+                    location.get("source"),
+                ),
+            )
+
+
 @app.get("/api/health")
 def health() -> dict[str, object]:
+    inference_configured = bool(INFERENCE_API_URL and INFERENCE_API_KEY)
     return {
-        "status": "ok",
+        "status": "ok" if inference_configured else "not_ready",
         "capabilities": {
-            "detect": False,
-            "species": False,
+            "detect": inference_configured,
+            "species": inference_configured,
             "audio": False,
             "assistant": False,
         },
-        "message": "Lightweight API is online; on-host AI inference is disabled.",
-        "classes": 0,
+        "message": (
+            "External AI inference is configured."
+            if inference_configured
+            else "Configure external inference to enable wildlife analysis."
+        ),
+        "classes": 27 if inference_configured else 0,
         "minimum_confidence": 0.5,
     }
 
@@ -176,11 +274,50 @@ def locations(limit: int = Query(default=1000, ge=1, le=5000)) -> list[dict[str,
 
 
 @app.post("/api/analyze")
-def analyze() -> None:
-    raise HTTPException(
-        status_code=503,
-        detail=(
-            "AI analysis is disabled on this lightweight deployment. "
-            "Use the full backend or connect an external inference service."
-        ),
+async def analyze(
+    file: UploadFile = File(...),
+    browser_latitude: float | None = Form(default=None),
+    browser_longitude: float | None = Form(default=None),
+) -> dict[str, Any]:
+    if not INFERENCE_API_URL:
+        raise HTTPException(
+            status_code=503,
+            detail="Configure INFERENCE_API_URL to enable wildlife analysis.",
+        )
+
+    data: dict[str, str] = {}
+    if browser_latitude is not None:
+        data["browser_latitude"] = str(browser_latitude)
+    if browser_longitude is not None:
+        data["browser_longitude"] = str(browser_longitude)
+
+    try:
+        await file.seek(0)
+        result = await _request_inference(
+            "POST",
+            "/api/analyze",
+            files={
+                "file": (
+                    Path(file.filename or "upload").name,
+                    file.file,
+                    file.content_type or "application/octet-stream",
+                )
+            },
+            data=data,
+            timeout=httpx.Timeout(600.0, connect=15.0),
+        )
+    finally:
+        await file.close()
+
+    if not isinstance(result, dict):
+        raise HTTPException(
+            status_code=502,
+            detail="External AI inference service returned an invalid analysis response.",
+        )
+    media_type = str(result.get("media_type", "unknown"))
+    _record_analysis(
+        Path(file.filename or "upload").name,
+        media_type,
+        result,
     )
+    return result

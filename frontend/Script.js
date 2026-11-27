@@ -25,8 +25,8 @@ const CONFIG = {
   API_BASE: configuredApiBase.replace(/\/+$/, ""),
   HEALTH_PATH: "/api/health",
   ANALYZE_PATH: "/api/analyze",
-  TIMEOUT_MS: 4000,
-  ANALYSIS_TIMEOUT_MS: 300000,
+  TIMEOUT_MS: 60000,
+  ANALYSIS_TIMEOUT_MS: 600000,
   MAP_TILE_URL: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
   MAP_REFRESH_MS: 30000,
 };
