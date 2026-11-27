@@ -16,10 +16,9 @@
    then the online copy). Fallbacks are handled by wgImg in the page <head>.
    ========================================================== */
 
-const configuredApiBase =
-  window.WILDGUARD_API_BASE ||
-  document.querySelector('meta[name="wildguard-api-base"]')?.content ||
-  "";
+const metaApiBase = document.querySelector('meta[name="wildguard-api-base"]')?.content || "";
+const isLocalPage = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const configuredApiBase = window.WILDGUARD_API_BASE || (isLocalPage ? "" : metaApiBase);
 
 const CONFIG = {
   API_BASE: configuredApiBase.replace(/\/+$/, ""),
