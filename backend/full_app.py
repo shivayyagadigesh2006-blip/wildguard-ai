@@ -150,10 +150,13 @@ def _load_detector() -> None:
     model_directory = SPARROW_MODEL_DIR / DETECTOR_MODEL_ID
     manifest_path = model_directory / "manifest.toml"
     if not manifest_path.is_file() or not any(model_directory.rglob("*.onnx")):
-        raise RuntimeError(
-            "Wildlife detector weights are missing. Run `python download_detector.py` "
-            "to install the licensed detector model."
+        _LOGGER.warning(
+            "Detector weights are missing at %s; downloading the verified model package.",
+            model_directory,
         )
+        from download_detector import install_detector
+
+        install_detector()
     sparrow_engine.init(device="auto", model_dir=str(SPARROW_MODEL_DIR))
     available_models = sparrow_engine.list_models()
     if not any(model.id == DETECTOR_MODEL_ID for model in available_models):

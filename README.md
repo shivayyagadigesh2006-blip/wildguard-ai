@@ -18,7 +18,7 @@ Animal detection and species classification use the local models; uploaded image
 
 ## Render animal detection and classification
 
-The Render Blueprint runs `backend/full_app.py` through `backend/app.py`. MegaDetector V6 (`MDV6-apa-rtdetr-e`) locates animals and returns bounding boxes; the uploaded `backend/models/best_wild_animal_classifier_b3.pth` then classifies each detected crop. The build installs CPU-only PyTorch and downloads the licensed detector weights with `backend/download_detector.py`. No external inference service is required.
+The Render Blueprint runs `backend/full_app.py` through `backend/app.py`. MegaDetector V6 (`MDV6-apa-rtdetr-e`) locates animals and returns bounding boxes; the uploaded `backend/models/best_wild_animal_classifier_b3.pth` then classifies each detected crop. The build installs CPU-only PyTorch and downloads the licensed detector weights with `backend/download_detector.py`; if a deployment starts without the weights, the service downloads and verifies them before initializing the detector. No external inference service is required.
 
 The full detector stack exceeded 1 GiB peak working set in a local test, so the Blueprint uses Render's Standard plan (2 GB RAM), not the 512 MB free plan. Render currently lists this 2 GB tier at $25/month; verify the price in your dashboard before deploying. The Vercel upload interface accepts images up to 15 MB. The classifier has 27 classes; animals outside them can be mislabeled. Neither model's confidence is a measured accuracy guarantee, and the classifier checkpoint has no supplied validation results. Render's filesystem is ephemeral, so its SQLite history can be lost after a restart or redeploy.
 
@@ -58,6 +58,7 @@ When Analyze is clicked, the browser requests the current location. If permissio
 Leaflet is loaded from unpkg and map tiles from the public OpenStreetMap tile service. Tile requests reveal the viewed map area and your IP address to that service. The map displays OpenStreetMap attribution and requests only normal visible tiles; the public tile service is best-effort, not intended for high-volume production use. Use a self-hosted or commercial tile provider if traffic grows. Keep this server bound to `127.0.0.1` and protect the database if the computer is shared. Map markers show upload locations, not the animal's exact position.
 
 The supplied EfficientNet-B3 checkpoint still does not include a validation set, so species scores are model outputs rather than measured accuracy. Missing model files or incompatible checkpoints cause an explicit startup error instead of fabricated predictions.
+# wildguard-ai
 # wildguard-ai
 # wildguard-ai
 # wildguard-ai
